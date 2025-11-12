@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Verbal ROI Calculator</title>
+    <style>
+      /* --- GLOBAL STYLES --- */
+      body {
+        font-family: Arial, sans-serif;
+        padding: 0;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f8f8f8;
+      }
+      h1, h3, h4 {
+          color: #007bff;
+      }
+      
+      /* --- MAIN CONTAINER FOR CENTERING --- */
+      .main-container {
+        max-width: 650px;
+        margin: 40px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      /* --- INPUTS & BUTTONS --- */
+      input[type="number"], input[type="text"], input[type="email"] {
+        padding: 8px;
+        margin-left: 10px;
+        width: 120px;
+        text-align: right;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 16px;
+      }
+      button {
+        padding: 10px 15px;
+        margin-right: 10px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        border: 1px solid #007bff;
+        border-radius: 4px;
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      .template-buttons button {
+        background-color: #f8f9fa;
+        color: #007bff;
+        border: 1px solid #007bff;
+      }
+      .template-buttons button:hover {
+        background-color: #e2e6ea;
+      }
+      hr {
+          border: 0;
+          height: 1px;
+          background: #ccc;
+          margin: 20px 0;
+      }
+
+      /* --- RESULTS BOX --- */
+      .roi-box {
+        background-color: #e8f4f8;
+        border: 2px solid #007bff;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: center;
+        border-radius: 8px;
+      }
+      .roi-multiple {
+        color: #007bff;
+        margin: 0;
+        font-size: 48px;
+      }
+      .roi-label {
+        margin: 10px 0 0 0;
+        font-size: 20px;
+        font-weight: bold;
+      }
+      .roi-description {
+        margin: 5px 0 0 0;
+        color: #666;
+        font-style: italic;
+      }
+      
+      /* New class to contain and center input groups */
+      .input-section {
+          max-width: 550px;
+          margin: 0 auto;
+      }
+
+      /* Input label and input alignment (desktop default) */
+      .input-group {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 15px;
+      }
+
+      /* Email Form Layout */
+      .email-form {
+          max-width: 550px;
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+          padding-top: 10px;
+          margin: 0 auto; 
+      }
+      .email-form .input-field {
+          margin-bottom: 10px;
+          display: flex;
+          flex-direction: column;
+      }
+      .email-form label {
+          font-weight: bold;
+          margin-bottom: 5px;
+          font-size: 14px;
+      }
+      .email-form input {
+          width: 100%;
+          margin-left: 0;
+          text-align: left;
+          min-width: 150px;
+      }
+      .email-form button {
+          width: 100%;
+          margin-top: 10px;
+      }
+      .email-form .error-message {
+          margin-top: 10px;
+          text-align: center;
+      }
+
+      .result-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #ccc;
+      }
+      
+      .result-row:last-child {
+        border-bottom: none;
+      }
+      
+      .result-label {
+        font-weight: bold;
+        color: #333;
+      }
+      
+      .result-value {
+        color: #007bff;
+        font-weight: bold;
+        font-size: 16px;
+      }
+      
+      /* --- BLUR/GATE STYLES --- */
+      
+      /* 1. Only blur the calculated value span */
+      .blurred-value {
+          filter: blur(5px);
+          pointer-events: none; 
+          user-select: none;
+          transition: filter 0.3s ease-out; 
+      }
+      
+      /* Style for the gate container */
+      #details-gate {
+          background-color: #f0f0f0; 
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          text-align: center;
+          margin: 20px auto; 
+          max-width: 550px; 
+      }
+
+      /* --- NEW: Result Buttons Container --- */
+      #action-buttons {
+          text-align: center;
+          margin: 20px auto;
+          max-width: 550px;
+      }
+      #action-buttons button {
+          width: auto;
+          margin: 5px 10px;
+          padding: 12px 20px;
+          background-color: #f8f9fa;
+          color: #007bff;
+          border: 1px solid #007bff;
+      }
+      #action-buttons button:hover {
+          background-color: #e2e6ea;
+      }
+
+      /* --- PRINT STYLES (for PDF) --- */
+      @media print {
+          /* Hide elements not needed in the PDF output */
+          .template-buttons, .input-section, hr, #action-buttons, #details-gate {
+              display: none !important;
+          }
+          .main-container {
+              box-shadow: none; /* Remove container shadow */
+              margin: 0;
+              padding: 0;
+              max-width: 100%;
+          }
+      }
+
+      /* --- MOBILE OPTIMIZATION --- */
+      @media screen and (max-width: 650px) {
+        .main-container {
+            margin: 0;
+            padding: 10px;
+        }
+        
+        #details-gate {
+            padding: 15px;
+        }
+        
+        #action-buttons button {
+            width: 90%; /* Stack buttons on mobile */
+            margin: 5px auto;
+            display: block;
+        }
+
+        /* Stack input groups vertically */
+        .input-group {
+          flex-direction: column;
+          align-items: flex-start;
+          margin-bottom: 20px;
+        }
+        .input-group p {
+          margin-bottom: 5px;
+          width: 100%;
+        }
+        .input-group input[type="number"] {
+          width: 100%;
+          margin-left: 0;
+          text-align: left;
+          height: 40px;
+        }
+        
+        /* Adjust Email Form for better stacking on mobile */
+        .email-form {
+            margin: 0;
+        }
+        .email-form button {
+            width: 100%;
+            margin-right: 0;
+        }
+        
+        /* Make templates wrap better */
+        .template-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .template-buttons button {
+            flex: 1 1 45%; 
+            margin: 5px;
+        }
+        
+        /* Stack result rows on mobile */
+        .result-row {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        
+        .result-value {
+          margin-top: 5px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-container">
+        
+        <div style="text-align: center;">
+            <h1>Verbal ROI Calculator</h1>
+            <p>
+                Compare costs based on your current coverage with manual workflows, versus 100% coverage with Verbal's AI-powered compliance. Enter your stats or start with a template.
+            </p>
+            <p>
+                <em>Note: Most healthcare organizations currently review less than 1% of patient interactions.</em>
+            </p>
+
+            <h3>Templates:</h3>
+            <div class="template-buttons">
+                <button onclick="loadTemplate(2000, 2, 1, 10, 72)">Small clinic (20 providers)</button>
+                <button onclick="loadTemplate(240000, 20, 1, 15, 72)">Hospital (300 beds)</button>
+                <button onclick="loadTemplate(3000000, 200, 1, 15, 72)">Health system (10 hospitals)</button>
+            </div>
+            <hr />
+            
+            <h3 style="text-align: center;">Your team's compliance workflow and costs</h3>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <p>Monthly patient interactions:</p>
+                <input type="number" id="volume" value="2000" oninput="updateROI()" />
+            </div>
+            <div class="input-group">
+                <p>Number of staff currently handling QA/compliance:</p>
+                <input type="number" id="staff" value="2" oninput="updateROI()" />
+            </div>
+            <div class="input-group">
+                <p>Percentage of patient interactions audited (%):</p>
+                <input type="number" id="reviewed" value="10" oninput="updateROI()" />
+            </div>
+            <div class="input-group">
+                <p>Average patient visit (minutes):</p>
+                <input type="number" id="qatime" value="10" oninput="updateROI()" />
+            </div>
+            <div class="input-group">
+                <p>Hourly wage of staff handling audits ($):</p>
+                <input type="number" id="wage" value="35" oninput="updateROI()" />
+            </div>
+        </div>
+
+        <hr />
+
+        <div id="results"></div> 
+        
+        <div id="action-buttons" style="display: none;">
+            <button onclick="saveAsPDF()"> Save as PDF</button>
+            <button onclick="shareResults()">Share results</button>
+        </div>
+
+    </div> 
+
+    <script>
+      // Verbal cost is $100 per user * 12 months = $1200 annually
+      const VERBAL_COST_PER_USER = 1200; 
+      const ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbzQi2-uwCXcsdtALE1ZC3e3avRWApYoigO5GaKwXXRJWwn2Q1IiT-0ZSSX2Ej880YzhFw/exec';
+      
+      let emailSubmitted = false;
+      
+      function isValidEmail(email) {
+          const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return pattern.test(email);
+      }
+
+      function saveAsPDF() {
+          window.print();
+      }
+
+      function shareResults() {
+          const volume = document.getElementById('volume').value;
+          const staff = document.getElementById('staff').value;
+          const reviewed = document.getElementById('reviewed').value;
+          const qatime = document.getElementById('qatime').value;
+          const wage = document.getElementById('wage').value;
+          
+          // Construct URL query parameters
+          const params = new URLSearchParams({
+              v: volume,
+              s: staff,
+              r: reviewed,
+              q: qatime,
+              w: wage,
+              unlocked: 'true' 
+          });
+          
+          const shareUrl = window.location.href.split('?')[0] + '?' + params.toString();
+          
+          // Attempt to copy to clipboard
+          navigator.clipboard.writeText(shareUrl).then(() => {
+              alert("Shareable link copied to clipboard!");
+          }).catch(err => {
+              // Fallback for browsers that block clipboard access
+              alert("Shareable link: " + shareUrl);
+          });
+      }
+
+      async function showDetails() {
+          const nameInput = document.getElementById('name-input');
+          const companyInput = document.getElementById('company-input');
+          const emailInput = document.getElementById('email-input');
+          const emailError = document.getElementById('email-error');
+          const submitButton = document.querySelector('#details-gate button');
+          
+          const email = emailInput.value.trim();
+          const name = nameInput.value.trim(); 
+          const company = companyInput.value.trim(); 
+          
+          if (!isValidEmail(email)) {
+              emailError.textContent = 'Please enter a valid email address.';
+              emailInput.style.borderColor = 'red';
+              return;
+          }
+          
+          emailError.textContent = '';
+          emailInput.style.borderColor = '#ccc';
+          
+          submitButton.disabled = true;
+          submitButton.textContent = 'Sending...';
+          
+          // --- DATA GATHERING (For App Script) ---
+          const volume = Number(document.getElementById('volume').value) || 0;
+          const staff = Number(document.getElementById('staff').value) || 0;
+          const auditPercentage = Number(document.getElementById('reviewed').value) || 0;
+          const averageVisitTime = Number(document.getElementById('qatime').value) || 0;
+          const wage = Number(document.getElementById('wage').value) || 0;
+          
+          const totalAuditTimePerInteraction = averageVisitTime * 1.5;
+          const totalAuditedInteractions = volume * (auditPercentage / 100);
+          const monthlyManualCost = totalAuditedInteractions * (totalAuditTimePerInteraction / 60) * wage;
+          const manualCost = monthlyManualCost * 12; 
+          const verbalCost = VERBAL_COST_PER_USER * staff;
+          const netSavings = manualCost - verbalCost;
+          
+          const roiElement = document.getElementById('roi-multiple-value');
+          const roiValue = roiElement ? roiElement.textContent : 'N/A'; 
+          
+          const data = {
+              email: email,
+              roi: roiValue,
+              name: name,         
+              company: company,
+              volume: volume,
+              staff: staff,
+              reviewed: auditPercentage,
+              qatime: averageVisitTime,
+              wage: wage,
+              manualCost: manualCost,
+              verbalCost: verbalCost,
+              netSavings: netSavings
+          };
+
+          const urlEncodedData = new URLSearchParams();
+          for (const key in data) {
+              urlEncodedData.append(key, String(data[key])); 
+          }
+
+          try {
+              const response = await fetch(ENDPOINT_URL, {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/x-www-form-urlencoded' 
+                  },
+                  body: urlEncodedData.toString()
+              });
+
+              emailError.textContent = 'Thank Adyou! Details unlocked.';
+              emailSubmitted = true;
+              updateROI(); 
+              
+          } catch (error) {
+              console.error('Error submitting form data:', error);
+              emailError.textContent = 'Network error. Please try again.'; 
+              
+          } finally {
+              submitButton.disabled = false;
+              submitButton.textContent = 'See results'; 
+          }
+      }
+
+      function loadTemplate(volume, staff, auditPercentage, averageVisitTime, wage) {
+          emailSubmitted = false; 
+          document.getElementById('volume').value = volume;
+          document.getElementById('staff').value = staff;
+          document.getElementById('reviewed').value = auditPercentage;
+          document.getElementById('qatime').value = averageVisitTime;
+          document.getElementById('wage').value = wage;
+          updateROI();
+      }
+
+      function updateROI() {
+        const volume = Number(document.getElementById('volume').value) || 0;
+        const staff = Number(document.getElementById('staff').value) || 0;
+        const auditPercentage = Number(document.getElementById('reviewed').value) || 0;
+        const averageVisitTime = Number(document.getElementById('qatime').value) || 0;
+        const wage = Number(document.getElementById('wage').value) || 0;
+
+        const resultsDiv = document.getElementById('results');
+        const actionButtonsDiv = document.getElementById('action-buttons');
+
+
+        if (volume <= 0 || staff <= 0 || wage <= 0 || auditPercentage <= 0) {
+            resultsDiv.innerHTML = '<h3 style="color: red;">Please enter positive values for Volume, Staff, Wage, and Audited Percentage to calculate ROI.</h3>';
+            actionButtonsDiv.style.display = 'none';
+            return;
+        }
+
+        const totalAuditTimePerInteraction = averageVisitTime * 1.5;
+        const totalAuditedInteractions = volume * (auditPercentage / 100);
+        
+        const monthlyManualCost = totalAuditedInteractions * (totalAuditTimePerInteraction / 60) * wage;
+        const manualCost = monthlyManualCost * 12; // Annual Manual Cost
+        
+        const currentCoverage = auditPercentage;
+
+        const verbalCost = VERBAL_COST_PER_USER * staff;
+        
+        const netSavings = manualCost - verbalCost;
+        const roiMultiple = netSavings >= 0 ? (netSavings / verbalCost).toFixed(2) : '0.00';
+        
+        const paybackWeeks = manualCost > 0 ? (verbalCost / (manualCost / 52)).toFixed(1) : 'N/A';
+        const coverageIncrease = (100 - currentCoverage).toFixed(1);
+
+        const manualCostFormatted = Math.round(manualCost).toLocaleString();
+        const verbalCostFormatted = Math.round(verbalCost).toLocaleString();
+        const netSavingsFormatted = Math.round(netSavings).toLocaleString();
+
+        let html = '<h2>Results:</h2>';
+        html += '<div class="roi-box">';
+        html += '<h2 class="roi-multiple"><span id="roi-multiple-value">' + roiMultiple + '</span>x</h2>';
+        html += '<p class="roi-label">Return on Investment</p>';
+        html += '<p class="roi-description">For every $1 spent on Verbal, you avoid <strong>$' + roiMultiple + ' in manual QA/compliance costs</strong>, all while getting <strong>100% compliance coverage</strong>.</p>';
+        html += '</div>';
+        
+        const blurClass = emailSubmitted ? '' : ' blurred-value'; 
+
+        if (emailSubmitted) {
+            // UNLOCKED STATE: Show clear results and Action Buttons
+            html += '<h3>Full savings breakdown:</h3>';
+            html += '<div class="roi-box">';
+            html += '<div class="result-row"><span class="result-label">Manual auditing costs (annual):</span><span class="result-value">$' + manualCostFormatted + '</span></div>';
+            html += '<div class="result-row"><span class="result-label">Verbal cost (annual):</span><span class="result-value">$' + verbalCostFormatted + '</span></div>';
+            html += '<div class="result-row"><span class="result-label">Net savings (annual):</span><span class="result-value">' + (netSavings >= 0 ? '$' + netSavingsFormatted : '-$' + Math.abs(Math.round(netSavings)).toLocaleString()) + '</span></div>';
+            html += '<div class="result-row"><span class="result-label">ROI:</span><span class="result-value">' + roiMultiple + 'x</span></div>';
+            html += '<div class="result-row"><span class="result-label">Verbal investment payback (weeks):</span><span class="result-value">' + paybackWeeks + '</span></div>';
+            html += '<div class="result-row"><span class="result-label">Increase in coverage:</span><span class="result-value">' + coverageIncrease + '%</span></div>';
+            html += '</div>';
+            
+            actionButtonsDiv.style.display = 'block'; // Show PDF/Share buttons
+            
+        } else {
+            // LOCKED STATE: Show blurred results + gate BELOW
+            
+            // 1. BLURRED RESULTS 
+            html += '<h3>Full savings breakdown:</h3>';
+            html += '<div class="roi-box">';
+            html += '<div class="result-row"><span class="result-label">Manual auditing costs  (annual):</span><span class="result-value' + blurClass + '">$' + manualCostFormatted + '</span></div>';
+            html += '<div class="result-row"><span class="result-label">Verbal cost (annual):</span><span class="result-value' + blurClass + '">$' + verbalCostFormatted + '</span></div>';
+            html += '<div class="result-row"><span class="result-label">Net savings (annual):</span><span class="result-value' + blurClass + '">' + (netSavings >= 0 ? '$' + netSavingsFormatted : '-$' + Math.abs(Math.round(netSavings)).toLocaleString()) + '</span></div>';
+            html += '<div class="result-row"><span class="result-label">ROI:</span><span class="result-value' + blurClass + '">' + roiMultiple + 'x</span></div>';
+            html += '<div class="result-row"><span class="result-label">Verbal investment payback (weeks):</span><span class="result-value' + blurClass + '">' + paybackWeeks + '</span></div>';
+            html += '<div class="result-row"><span class="result-label">Increase in coverage:</span><span class="result-value' + blurClass + '">' + coverageIncrease + '%</span></div>';
+            html += '</div>';
+            
+            // 2. GATE FORM (placed *after* the blurred results)
+            html += '<div id="details-gate">';
+            html += '<h3 style="text-align: center;">See the full breakdown</h3>';
+            html += '<p style="text-align: center; max-width: 450px; margin: 10px auto;">Enter your info to see all costs and savings, including current manual QA costs, Verbal cost, net savings and payback period.</p>';
+            html += '<div class="email-form">';
+            html += '<div class="input-field"><label for="name-input">Name:</label><input type="text" id="name-input" placeholder="Name (optional)" /></div>';
+            html += '<div class="input-field"><label for="company-input">Company:</label><input type="text" id="company-input" placeholder="Company (optional)" /></div>';
+            html += '<div class="input-field"><label for="email-input">Work email:</label><input type="email" id="email-input" placeholder="Work email (required)" /></div>';
+            html += '<button onclick="showDetails()">See results</button>';
+            html += '<p id="email-error" class="error-message" style="color: red;"></p>';
+            html += '</div></div>';
+            
+            actionButtonsDiv.style.display = 'none'; // Hide PDF/Share buttons
+        }
+
+        resultsDiv.innerHTML = html;
+      }
+
+      // NEW: Function to check for URL parameters and auto-load inputs
+      function checkUrlParameters() {
+          const params = new URLSearchParams(window.location.search);
+          const volume = params.get('v');
+          
+          if (volume) {
+              document.getElementById('volume').value = params.get('v') || 0;
+              document.getElementById('staff').value = params.get('s') || 0;
+              document.getElementById('reviewed').value = params.get('r') || 0;
+              document.getElementById('qatime').value = params.get('q') || 0;
+              document.getElementById('wage').value = params.get('w') || 0;
+              
+              // If the 'unlocked' flag is present, treat it as submitted
+              if (params.get('unlocked') === 'true') {
+                  emailSubmitted = true;
+              }
+          }
+          updateROI();
+      }
+
+      document.addEventListener('DOMContentLoaded', checkUrlParameters); // Run check on load
+    </script>
+  </body>
+</html>
